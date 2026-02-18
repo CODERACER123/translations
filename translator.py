@@ -156,7 +156,7 @@ class TranslationService:
         if text_lower in trans_dict:
             # Preserve original capitalization pattern
             translated = trans_dict[text_lower]
-            if text[0].isupper():
+            if text and text[0].isupper():
                 translated = translated.capitalize()
             return translated
         
@@ -165,6 +165,9 @@ class TranslationService:
         translated_words = []
         
         for word in words:
+            if not word:  # Skip empty strings
+                continue
+                
             word_lower = word.lower().strip('.,!?;:')
             punctuation = ''
             
@@ -175,7 +178,7 @@ class TranslationService:
             if word_lower in trans_dict:
                 translated_word = trans_dict[word_lower]
                 # Preserve capitalization
-                if word[0].isupper():
+                if word and word[0].isupper():
                     translated_word = translated_word.capitalize()
                 translated_words.append(translated_word + punctuation)
             else:
