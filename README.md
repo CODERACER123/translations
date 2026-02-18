@@ -2,6 +2,8 @@
 
 A web-based translation application that supports translation between three languages: English, Spanish, and French. Built with Flask and featuring both a user-friendly web interface and a RESTful API.
 
+> **🚀 New here? Check the [QUICKSTART.md](QUICKSTART.md) for a fast guide on how to run and test the application!**
+
 ## Features
 
 - 🌐 **Multi-language Support**: Translate between English, Spanish, and French
