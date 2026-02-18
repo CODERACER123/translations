@@ -170,4 +170,9 @@ def internal_error(error):
 
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    # Use configuration from Config class for debug mode
+    # Only bind to all interfaces in development
+    import os
+    debug_mode = os.environ.get('FLASK_DEBUG', 'False').lower() == 'true'
+    host = '0.0.0.0' if debug_mode else '127.0.0.1'
+    app.run(debug=debug_mode, host=host, port=5000)
