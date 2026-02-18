@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Translation Application</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🌐 Translation Application</h1>
+            <p class="subtitle">Translate between English, Spanish, and French</p>
+        </header>
+        
+        <main>
+            <div class="translation-form">
+                <div class="language-selectors">
+                    <div class="language-selector">
+                        <label for="source-lang">From:</label>
+                        <select id="source-lang" name="source-lang">
+                            {% for code, name in languages.items() %}
+                            <option value="{{ code }}" {% if code == 'en' %}selected{% endif %}>{{ name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <button type="button" id="swap-languages" class="swap-btn" title="Swap languages">
+                        ⇄
+                    </button>
+                    
+                    <div class="language-selector">
+                        <label for="target-lang">To:</label>
+                        <select id="target-lang" name="target-lang">
+                            {% for code, name in languages.items() %}
+                            <option value="{{ code }}" {% if code == 'es' %}selected{% endif %}>{{ name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="text-areas">
+                    <div class="text-area-container">
+                        <label for="source-text">Enter text to translate:</label>
+                        <textarea 
+                            id="source-text" 
+                            name="source-text" 
+                            rows="8" 
+                            placeholder="Type or paste text here..."
+                            maxlength="5000"
+                        ></textarea>
+                        <div class="char-count">
+                            <span id="char-count">0</span> / 5000 characters
+                        </div>
+                    </div>
+                    
+                    <div class="text-area-container">
+                        <label for="target-text">Translation:</label>
+                        <textarea 
+                            id="target-text" 
+                            name="target-text" 
+                            rows="8" 
+                            placeholder="Translation will appear here..."
+                            readonly
+                        ></textarea>
+                    </div>
+                </div>
+                
+                <div class="button-group">
+                    <button type="button" id="translate-btn" class="btn btn-primary">
+                        Translate
+                    </button>
+                    <button type="button" id="clear-btn" class="btn btn-secondary">
+                        Clear
+                    </button>
+                </div>
+                
+                <div id="error-message" class="error-message" style="display: none;"></div>
+                <div id="success-message" class="success-message" style="display: none;"></div>
+            </div>
+            
+            <div class="info-section">
+                <h2>API Documentation</h2>
+                <p>You can also use our RESTful API to translate text programmatically.</p>
+                
+                <h3>POST /api/translate</h3>
+                <pre><code>{
+  "text": "Hello",
+  "source_lang": "en",
+  "target_lang": "es"
+}</code></pre>
+                
+                <h3>Response:</h3>
+                <pre><code>{
+  "success": true,
+  "translation": "Hola",
+  "source_lang": "en",
+  "target_lang": "es",
+  "original_text": "Hello"
+}</code></pre>
+                
+                <h3>GET /api/languages</h3>
+                <p>Get list of supported languages</p>
+            </div>
+        </main>
+        
+        <footer>
+            <p>&copy; 2026 Translation Application | Supports English, Spanish, and French</p>
+        </footer>
+    </div>
+    
+    <script>
+        // DOM elements
+        const sourceLang = document.getElementById('source-lang');
+        const targetLang = document.getElementById('target-lang');
+        const sourceText = document.getElementById('source-text');
+        const targetText = document.getElementById('target-text');
+        const translateBtn = document.getElementById('translate-btn');
+        const clearBtn = document.getElementById('clear-btn');
+        const swapBtn = document.getElementById('swap-languages');
+        const charCount = document.getElementById('char-count');
+        const errorMessage = document.getElementById('error-message');
+        const successMessage = document.getElementById('success-message');
+        
+        // Update character count
+        sourceText.addEventListener('input', () => {
+            charCount.textContent = sourceText.value.length;
+            hideMessages();
+        });
+        
+        // Translate button click
+        translateBtn.addEventListener('click', async () => {
+            const text = sourceText.value.trim();
+            
+            if (!text) {
+                showError('Please enter some text to translate');
+                return;
+            }
+            
+            if (sourceLang.value === targetLang.value) {
+                showError('Source and target languages must be different');
+                return;
+            }
+            
+            // Disable button during translation
+            translateBtn.disabled = true;
+            translateBtn.textContent = 'Translating...';
+            hideMessages();
+            
+            try {
+                const response = await fetch('/api/translate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        text: text,
+                        source_lang: sourceLang.value,
+                        target_lang: targetLang.value
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    targetText.value = data.translation;
+                    showSuccess('Translation completed successfully!');
+                } else {
+                    showError(data.error || 'Translation failed');
+                    targetText.value = '';
+                }
+            } catch (error) {
+                showError('Network error: Could not connect to the server');
+                targetText.value = '';
+            } finally {
+                translateBtn.disabled = false;
+                translateBtn.textContent = 'Translate';
+            }
+        });
+        
+        // Clear button click
+        clearBtn.addEventListener('click', () => {
+            sourceText.value = '';
+            targetText.value = '';
+            charCount.textContent = '0';
+            hideMessages();
+        });
+        
+        // Swap languages button click
+        swapBtn.addEventListener('click', () => {
+            const temp = sourceLang.value;
+            sourceLang.value = targetLang.value;
+            targetLang.value = temp;
+            
+            // Also swap the text if both have content
+            if (sourceText.value && targetText.value) {
+                const tempText = sourceText.value;
+                sourceText.value = targetText.value;
+                targetText.value = tempText;
+                charCount.textContent = sourceText.value.length;
+            }
+            
+            hideMessages();
+        });
+        
+        // Allow Enter key to trigger translation
+        sourceText.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 'Enter') {
+                translateBtn.click();
+            }
+        });
+        
+        // Helper functions
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+            successMessage.style.display = 'none';
+        }
+        
+        function showSuccess(message) {
+            successMessage.textContent = message;
+            successMessage.style.display = 'block';
+            errorMessage.style.display = 'none';
+        }
+        
+        function hideMessages() {
+            errorMessage.style.display = 'none';
+            successMessage.style.display = 'none';
+        }
+    </script>
+</body>
+</html>
