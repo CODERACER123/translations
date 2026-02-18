@@ -2,6 +2,8 @@
 
 ## 🚀 Where to Check the Translation Application
 
+![Translation Application Interface](https://github.com/user-attachments/assets/3abbf1ec-946f-42b0-a4e2-56afeb229e1f)
+
 ### 1. **Read the Full Documentation**
 📖 **Check the [README.md](README.md)** - Contains complete setup instructions, API documentation, and usage examples.
 
